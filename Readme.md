@@ -14,4 +14,4 @@ The service must:
 validate accounts
 check transaction limits
 process transfer
-prevent duplicate transactions
+prevent duplicate transactions via idempotency record

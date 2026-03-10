@@ -1,6 +1,8 @@
 package com.ecobank.fundtransferservice.controller.advice;
 
 import com.ecobank.fundtransferservice.exception.AccountException;
+import com.ecobank.fundtransferservice.exception.DuplicateIdempotencyKeyException;
+import com.ecobank.fundtransferservice.exception.InsufficientFundsException;
 import com.ecobank.fundtransferservice.exception.ResourceNotFoundException;
 import com.ecobank.fundtransferservice.exception.UserException;
 import com.ecobank.fundtransferservice.model.dto.base.ApiResponse;
@@ -21,6 +23,7 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @RestControllerAdvice
 @Slf4j
@@ -140,6 +143,49 @@ public class GlobalExceptionHandler {
                 .build();
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(InsufficientFundsException.class)
+    public ResponseEntity<ApiResponse<Object>> handleInsufficientFundsException(
+            InsufficientFundsException ex, HttpServletRequest request) {
+
+        ErrorDetails errorDetails = ErrorDetails.builder()
+                .code("INSUFFICIENT_FUNDS")
+                .description(ex.getMessage())
+                .build();
+
+        ApiResponse<Object> response = ApiResponse.<Object>builder()
+                .statusCode(HttpStatus.BAD_REQUEST.value())
+                .success(false)
+                .message("Transaction failed")
+                .error(errorDetails)
+                .timestamp(LocalDateTime.now())
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(DuplicateIdempotencyKeyException.class)
+    public ResponseEntity<ApiResponse<Object>> handleDuplicateIdempotencyKeyException(
+            DuplicateIdempotencyKeyException ex, HttpServletRequest request) {
+
+        ErrorDetails errorDetails = ErrorDetails.builder()
+                .code("DUPLICATE_IDEMPOTENCY_KEY")
+                .description(ex.getMessage())
+                .details(Map.of("cachedResponse", ex.getCachedResponse()))
+                .build();
+
+        ApiResponse<Object> response = ApiResponse.<Object>builder()
+                .statusCode(HttpStatus.CONFLICT.value())
+                .success(false)
+                .message("Duplicate transaction")
+                .error(errorDetails)
+                .timestamp(LocalDateTime.now())
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)

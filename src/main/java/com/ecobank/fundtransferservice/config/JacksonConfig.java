@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class JacksonConfig {
 
+    // https://www.baeldung.com/spring-boot-customize-jackson-objectmapper
     @Bean
     public ObjectMapper objectMapper() {
         return new ObjectMapper()
